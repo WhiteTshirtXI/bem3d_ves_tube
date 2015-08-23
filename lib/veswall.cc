@@ -39,15 +39,7 @@ namespace {
 
 
 VesWall::VesWall()
-{   
-    nprb = 0;
-    xprb_ptr = NULL;
-    vprb_ptr = NULL;
-
-    ntrac = 0;
-    xtrac_ptr = NULL;
-    vtrac_ptr = NULL;
-    
+{
     for (int iblk = 0; iblk < NBLK; iblk++)
     for (int jblk = 0; jblk < NBLK; jblk++) {
         matSL[iblk][jblk] = NULL;
@@ -58,11 +50,6 @@ VesWall::VesWall()
 
 VesWall::~VesWall()
 { 
-    delete [] xprb_ptr;
-    delete [] vprb_ptr;
-    
-    delete [] xtrac_ptr;
-    delete [] vtrac_ptr;
 }
 
 /* -- Index meshes, vertices, and faces
@@ -682,7 +669,10 @@ void VesWall::timeInt()
     char token[256], tensionfn[256];
     int nout;
     double facelocalpressure;
-    double stresstau[3][3];
+	double stresstau[3][3];
+
+
+    //if(mpi_rank == 0) {cout << vesicles[0].verts[0].x[0] << "a\n";}
 
 
     // Zero out vesicle.sigma initially
@@ -691,10 +681,32 @@ void VesWall::timeInt()
 	vesicle.sigma = 0.0;
     }
 
+    //if(mpi_rank == 0) {cout << vesicles[0].verts[0].x[0] << "b\n";}
+
+
+	if(mpi_rank == 0) //Log simulation parameters as header to output summary file
+	{
+		printf("Output directory = %s\n", outfiledirectory.c_str());
+		printf("vbkg = %.5f, %.5f, %.5f\n", vbkg[0], vbkg[1], vbkg[2]);
+		printf("EB = %.5f\n", vesicles[0].EB);
+		printf("Viscosity ratio = %.5f\n", viscRat);
+		printf("Surface Area = %.5f\n", vesicles[0].areaTar);
+		printf("Volume = %.5f\n", vesicles[0].volTar);
+		printf("Reduced Volume = %.5f\n", 6*sqrt(3.14159265359)*vesicles[0].volTar*pow(vesicles[0].areaTar, -1.5));
+	}
+
+
+
+
+
+
+
     for (; lt <= Nt; lt++) {
         double wtimeBgn = MPI_Wtime();
 
 	if (mpi_rank == 0) printf("lt = %9d time = %.5f\n", lt, time);
+
+    //if(mpi_rank == 0) {cout << vesicles[0].verts[0].x[0] << "c\n";}
 
 	// Domain decomposition
 	for (int ives = 0; ives < numVesicles(); ives++) {
@@ -705,28 +717,51 @@ void VesWall::timeInt()
 	    vesicle.tensionForce(vesicle.sigma, vesicle.ftens);
 	}
 
+    //if(mpi_rank == 0) {cout << vesicles[0].verts[0].x[0] << "d\n";}
+
+
 	for (int iwall = 0; iwall < numWalls(); iwall++) {
 	    Wall &wall = walls[iwall];
 	    wall.updateGeometry();
 	}
+    //if(mpi_rank == 0) {cout << vesicles[0].verts[0].x[0] << "e\n";}
 
 	domainDecomp();
+    //if(mpi_rank == 0) {cout << vesicles[0].verts[0].x[0] << "f\n";}
+
 	updateNeighborList();
+   // if(mpi_rank == 0) {cout << vesicles[0].verts[0].x[0] << "g\n";}
+
 	calcBieMat();
+    //if(mpi_rank == 0) {cout << vesicles[0].verts[0].x[0] << "h\n";}
 
 	// Solve the wall friction force
 	Vec wall_rhs = getWallBieRhs();
+    //if(mpi_rank == 0) {cout << vesicles[0].verts[0].x[0] << "i\n";}
+
 	calcRhs_wallBie(wall_rhs);
+    //if(mpi_rank == 0) {cout << vesicles[0].verts[0].x[0] << "j\n";}
+
 	solveWallBie();
+    //if(mpi_rank == 0) {cout << vesicles[0].verts[0].x[0] << "k\n";}
 
 	// Solve the vesicle velocity
 	{
 	    // Prediction
 	    Vec rhs_vel = getVesicleBieRhs();
+	        //if(mpi_rank == 0) {cout << vesicles[0].verts[0].x[0] << "l\n";}
+
 	    Vec sol_vel = getVesicleBieSol();
+    //if(mpi_rank == 0) {cout << vesicles[0].verts[0].x[0] << "m\n";}
+
 	    VecScatter scatter_vel = getVesicleBieScatter();
+    //if(mpi_rank == 0) {cout << vesicles[0].verts[0].x[0] << "n\n";}
+
 	    calcRhs_vesicleBie(rhs_vel);
+    //if(mpi_rank == 0) {cout << vesicles[0].verts[0].x[0] << "o\n";}
+
 	    solveVesicleBie(Ts);
+   // if(mpi_rank == 0) {cout << vesicles[0].verts[0].x[0] << "p\n";}
 
 	    // Projection
 	    int n = vertList[VESICLE].size();
@@ -745,6 +780,7 @@ void VesWall::timeInt()
 		    p++;
 		}
 	    }
+   // if(mpi_rank == 0) {cout << vesicles[0].verts[0].x[0] << "q\n";}
 
 	    myVecScatter(scatter_vel, sol_vel, vold.data(), INSERT_VALUES, SCATTER_FORWARD);
 	    projectVel(vold, divTar, vnew, lbd);
@@ -758,10 +794,13 @@ void VesWall::timeInt()
 
 		p += nvert;
 	    }
+	        //if(mpi_rank == 0) {cout << vesicles[0].verts[0].x[0] << "r\n";}
+
         }
 
 	// Probe velocity
 	calcProbeVel(xprb, vprb);
+    //if(mpi_rank == 0) {cout << vesicles[0].verts[0].x[0] << "s\n";}
 
 	// Output the state before system evolves
 	writeAll();
@@ -773,77 +812,63 @@ void VesWall::timeInt()
 		    nout = param::exist(token)? param::getIntValue(token) : -1;
 		    if (lt%nout == 0) 
 		    {
-	    	    //Write tension at each vertex
-			sprintf(tensionfn, "%s%6.6d%s", "D/tension", lt, ".dat");
-			FILE *file = fopen(tensionfn, "w");
-		    	for (int ives = 0; ives < numVesicles(); ives++) 
-		    	{
-				Vesicle &vesicle = vesicles[ives];
-				fprintf(file, "Tension at each vertex\n");
-
-				for(int ivert = 0; ivert < vesicle.numVerts(); ivert++)
-				{
-					fprintf(file, "%.6f\n", vesicle.sigma(ivert));
-				}
-				fprintf(file, "\n");
-				fclose(file);
-			    }
-
+	    	    
                 /////////////////////////////
                 //Write pressure at each face
-			sprintf(tensionfn, "%s%6.6d%s", "D/pressure", lt, ".dat");
-			FILE *pressfile = fopen(tensionfn, "w");
+				sprintf(tensionfn, "%s%6.6d%s", "D/pressure", lt, ".dat");
+				FILE *pressfile = fopen(tensionfn, "w");
 
 		    	for (int ives = 0; ives < numVesicles(); ives++) 
 		    	{
 		    		Vesicle &vesicle = vesicles[ives];		
-				fprintf(pressfile, "Pressure at each face\n");
+					fprintf(pressfile, "Pressure at each face\n");
 
-				for(int ifa = 0; ifa < vesicle.faces.size(); ifa++)
-				{   //This loop is a localized version of calcStress()
-				    Tri &face = vesicle.faces[ifa];
-				    m_dclear(9, *stresstau);
+					for(int ifa = 0; ifa < vesicle.faces.size(); ifa++)
+					{   //This loop is a localized version of calcStress()
+					    Tri &face = vesicle.faces[ifa];
+					    m_dclear(9, *stresstau);
 
-				    double xtri[3][3], ftri[3][3], vtri[3][3]; 
+					    double xtri[3][3], ftri[3][3], vtri[3][3]; 
 
-				    for (int l = 0; l < 3; l++) 
-					{
-					int ivert = face.ivert[l];
-					m_dcopy(3, vesicle.verts[ivert].x, xtri[l]);
+					    for (int l = 0; l < 3; l++) 
+					    {
+							int ivert = face.ivert[l];
+						    m_dcopy(3, vesicle.verts[ivert].x, xtri[l]);
 
-					m_dclear(3, ftri[l]);
-					m_dadd(3, &vesicle.fbend(ivert,0), ftri[l]);
-					m_dadd(3, &vesicle.ftens(ivert,0), ftri[l]);
+							m_dclear(3, ftri[l]);
+							m_dadd(3, &vesicle.fbend(ivert,0), ftri[l]);
+							m_dadd(3, &vesicle.ftens(ivert,0), ftri[l]);
 
-					m_dcopy(3, &vesicle.v(ivert,0), vtri[l]);
-					}
+							m_dcopy(3, &vesicle.v(ivert,0), vtri[l]);
+						}
 
-					Quad2D &Q = quadrature::select_rule_2d("TRI_3");
-					for (int iq = 0; iq < Q.n(); iq++) 
-					{
-					double s = Q.x(iq), t = Q.y(iq);
-					double r = 1.0 - s - t;
+					    Quad2D &Q = quadrature::select_rule_2d("TRI_3");
+					    for (int iq = 0; iq < Q.n(); iq++) 
+					    {
+						    double s = Q.x(iq), t = Q.y(iq);
+							double r = 1.0 - s - t;
 
-					double xq[3], fq[3], vq[3], dA;
-					FOR_I3 {
-					    xq[i] = r*xtri[0][i] + s*xtri[1][i] + t*xtri[2][i] - vesicle.center[i];
-					    fq[i] = r*ftri[0][i] + s*ftri[1][i] + t*ftri[2][i];
-					    vq[i] = r*vtri[0][i] + s*vtri[1][i] + t*vtri[2][i];
-					        }
-					dA = Q.w(iq)*face.detJ;
+						    double xq[3], fq[3], vq[3], dA;
+							FOR_I3 {
+							    xq[i] = r*xtri[0][i] + s*xtri[1][i] + t*xtri[2][i] - vesicle.center[i];
+							    fq[i] = r*ftri[0][i] + s*ftri[1][i] + t*ftri[2][i];
+							    vq[i] = r*vtri[0][i] + s*vtri[1][i] + t*vtri[2][i];
+						        }
+							dA = Q.w(iq)*face.detJ;
 
 
                             //Technically, the below statement could be a single loop over the diagonal, but I leave in all of the stress tensor for clarity 
 			                FOR_I3
 			                FOR_J3 {  
-			                    stresstau[i][j] += 0.5*(fq[i]*xq[j] + fq[j]*xq[i])*dA;
-					    stresstau[i][j] += (viscRat - 1.0)*
-					    		(vq[i]*face.normal[j] + vq[j]*face.normal[i])*dA;
-				            }
+				                    stresstau[i][j] += 0.5*(fq[i]*xq[j] + fq[j]*xq[i])*dA;
+								    stresstau[i][j] += (viscRat - 1.0)*
+						    		(vq[i]*face.normal[j] + vq[j]*face.normal[i])*dA;
+					            }
+
 					            
 					    } // iq
 
-                        facelocalpressure = 0.0 - (stresstau[0][0] + stresstau[1][1] + stresstau[2][2])*0.33333333333333333;
+                        facelocalpressure = -(stresstau[0][0] + stresstau[1][1] + stresstau[2][2])*0.33333333333333333;
 						fprintf(pressfile, "%.6f\n", facelocalpressure);
 					} //ifa
 					fprintf(pressfile, "\n");
@@ -877,43 +902,9 @@ void VesWall::timeInt()
 
 		FOR_D3 vert.x[d] += Ts*v[d];
 	    }
-	    
 
 	    // Adjust volume
-	    // JMB: Revised to keep vesicle fixed in place. This allows us to mesh the wall adaptively, so only the region near the vesicle is very fine.
-	    double oldcom[3];  // Old center of mass
-	    double comvelcancel[3];  //Velocity that cancels center of mass movement
-	    FOR_D3 oldcom[d] = vesicle.center[d];  //Record old center of mass before updateAVC()
-
-	    vesicle.updateAVC();  // Get new center of mass, update area and volume
-
-	    FOR_D3 comvelcancel[d] = oldcom[d] - vesicle.center[d];
-
-	    // For each point, cancel center of mass movement
-	    for (int ivert = 0; ivert < nvert; ivert++) {
-	    Point &vert = vesicle.verts[ivert];
-	    
-            FOR_D3 {
-	         vert.x[d] += comvelcancel[d];
-	           }
-	           }
-	    
-	    // Now just need to update the center of mass again
-	    FOR_D3 {
-	         vesicle.center[d] += comvelcancel[d];
-	           }  //You can check that vesicle.center is now equal to oldcom
-	    
-	    // Print x-component of COM velocity
-	    double xvelCOM = -comvelcancel[0]/Ts; 
-	    double yvelCOM = -comvelcancel[1]/Ts;
-	    double zvelCOM = -comvelcancel[2]/Ts;
-	    if (mpi_rank == 0)
-	    {
-	        printf("    x-COM velocity = %4.9f \n",xvelCOM);
-	    }
-	    ///////////////////
-	     
-	    //vesicle.updateAVC(); // if you want the vesicle to move, just uncomment this line and comment out the lines above starting from JMB and ending with //////////////
+	    vesicle.updateAVC();
 	    double Vtar = max(0.99*vesicle.vol, min(1.01*vesicle.vol, vesicle.volTar));
 	    double s = pow(Vtar/vesicle.vol, 1.0/3.0);
 	    for (int ivert = 0; ivert < nvert; ivert++) {
@@ -931,7 +922,7 @@ void VesWall::timeInt()
 	//======================================================================
 	// Post-process
 	
-	// Prevent vesicle overlapping
+	// Prevent cell overlapping
 	updateSourceGeometry();
 	vector<NbrList*> nlists;
 	nlists.push_back(&nlist_phys[VESICLE][VESICLE]);
@@ -945,6 +936,8 @@ void VesWall::timeInt()
         double wtimeEnd = MPI_Wtime();
 	if (mpi_rank == 0) {
 	    printf("    total wtime = %7.2f s\n", wtimeEnd - wtimeBgn);
+	    printf("S Area = %.5f\n", vesicles[0].areaTar);
+		printf("Volume = %.5f\n", vesicles[0].volTar);
 	}
 
 	// Check whether to kill job
@@ -1223,14 +1216,6 @@ void VesWall::writeAll()
 	sprintf(fn, FN_FMT, "D/restart", lt, ".dat");
 	if (mpi_rank == 0) writeRestart(fn);
     }
-
-    // Probes
-    strcpy(token, "PROBE_OUT");
-    nout = param::exist(token)? param::getIntValue(token) : -1;
-    if (nout > 0 && lt%nout == 0) {
-	sprintf(fn, FN_FMT, "D/probe", lt, ".dat");
-	if (mpi_rank == 0) writeProbe(fn);
-    }
 }
 
 
@@ -1242,7 +1227,9 @@ void VesWall::writeVesicles(const char *fn)
     if (numVesicles() <= 0) return;
 
     FILE *file = fopen(fn, "w");
-    fprintf(file, "variables = x, y, z\n");
+    fprintf(file, "# TIME = %f\n", time);
+
+    fprintf(file, "variables = x, y, z, un, vn, wn, tension\n");
 
     for (int ives = 0; ives < numVesicles(); ives++) {
         Vesicle &vesicle = vesicles[ives];
@@ -1251,10 +1238,26 @@ void VesWall::writeVesicles(const char *fn)
 	fprintf(file, "zone N=%d E=%d F=FEPOINT ET=TRIANGLE\n", nvert, nface);
 
 	// coordinates
-	for (int ivert = 0; ivert < nvert; ivert++) {
+	for (int ivert = 0; ivert < nvert; ivert++) 
+	{
 	    Point &vert = vesicle.verts[ivert];
-	    fprintf(file, " %10.3E %10.3E %10.3E\n", vert.x[0], vert.x[1], vert.x[2]);
-        }
+	    fprintf(file, " %10.7f %10.7f %10.7f", vert.x[0], vert.x[1], vert.x[2]);
+
+		
+        //Write normal velocity
+        const double *nrml = &vesicle.vertNrml(ivert,0);
+		double vn = m_ddot(3, nrml, &vesicle.v(ivert,0));
+	    fprintf(file, " %.7f %.7f %.7f", vn*vesicle.vertNrml(ivert,0), vn*vesicle.vertNrml(ivert,1), vn*vesicle.vertNrml(ivert,2));
+
+
+
+		//Write tension at each vertex
+		fprintf(file, " %.7f\n", vesicle.sigma(ivert));
+
+    }
+
+
+
 
 	// connectivity
 	for (int iface = 0; iface < nface; iface++) {
@@ -1276,6 +1279,8 @@ void VesWall::writeWalls(const char *fn)
     if (numWalls() <= 0) return;
 
     FILE *file = fopen(fn, "w");
+    fprintf(file, "# TIME = %f\n", time);
+
     fprintf(file, "VARIABLES = X, Y, Z, FX, FY, FZ\n");
 
     for (int iwall = 0; iwall < numWalls(); iwall++) {
@@ -1293,7 +1298,7 @@ void VesWall::writeWalls(const char *fn)
 	    fprintf(file, " %10.3E %10.3E %10.3E", vert.x[0], vert.x[1], vert.x[2]);
 
 	    if (write_force) {
-	        fprintf(file, " %10.3E %10.3E %10.3E", 
+	        fprintf(file, " %10.7E %10.7E %10.7E", 
 		    wall.f(ivert,0), wall.f(ivert,1), wall.f(ivert,2));
 	    } else {
 	        fprintf(file, " %10.3E %10.3E %10.3E", 0.0, 0.0, 0.0);
@@ -1763,46 +1768,3 @@ double VesWall::volFraction()
 
     return vol/ewald::vol;
 }
-
-/* Check whether a point lies within a vesicle
- * Argument:
- *   x0 -- the coordinate of the point
- *   whichVesicle -- index of the vesicle that the point penetrates 
- * Algorithm:
- *   -- If a point is outside a vesicle, the total spherical angle is 0 */
-bool VesWall::pointInsideSomeVesicle(const double *x0, int *whichVesicle)
-{
-    bool is_interior = false;
-    if (whichVesicle) *whichVesicle = -1;
-
-    for (int ives = 0; ives < numVesicles(); ives++) {
-        Vesicle &vesicle = vesicles[ives];
-
-        double xtmp[3];
-        FOR_I3 xtmp[i] = x0[i];
-        ewald::to_CloseBy(vesicle.center, xtmp);
-
-        double xmin[3], xmax[3];
-        vesicle.getCoordRange(xmin, xmax);
-
-        if (   xtmp[0] < xmin[0] || xtmp[0] > xmax[0]
-            || xtmp[1] < xmin[1] || xtmp[1] > xmax[1]
-            || xtmp[2] < xmin[2] || xtmp[2] > xmax[2] ) continue;
-
-        double sangle = 0.0;
-        for (int iface = 0; iface < vesicle.numFaces(); iface++) {
-            Tri &face = vesicle.faces[iface];
-            double xtri[3][3];
-            FOR_I3 FOR_J3 xtri[i][j] = face.vert[i]->x[j];
-            sangle += tri_solidAngle(xtmp, xtri);
-        }
-        if (fabs(sangle) > 1.E-2) {
-            is_interior = true;
-            if (whichVesicle) *whichVesicle = ives;
-            break;
-        }
-    } // ives
-
-    return is_interior;
-}
-
