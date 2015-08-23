@@ -1,0 +1,29 @@
+#!/bin/bash
+
+#PBS -N BLOOD
+#PBS -e BLOOD.err
+#PBS -o BLOOD.out
+#PBS -m aeb
+#PBS -M spann@stanford.edu
+#PBS -l nodes=3:ppn=24
+#PBS -l walltime=500:00:00
+#PBS -q long
+#PBS -V
+
+PBS_O_WORKDIR='/home/spann/blood/platelet/main/'
+          export PBS_O_WORKDIR
+### -------------------------
+### BEGINNING OF EXECUTION
+### -------------------------
+
+
+echo The master node of this job is 'hostname'
+echo The working directory is 'echo $PBS_O_WORKDIR'
+echo This job runs on the following nodes:
+echo 'cat $PBS_NODEFILE'
+
+### end of information preamble
+
+cd $PBS_O_WORKDIR
+cmd="mpiexec -ppn 12 ./channel -override -RESTART D36/moreinit/ht30/restart079800.dat -OUTPUT_DIRECTORY D41/bht30 -ca 2"
+$cmd >& $PBS_O_WORKDIR/D41/csv/bht30ca2.csv

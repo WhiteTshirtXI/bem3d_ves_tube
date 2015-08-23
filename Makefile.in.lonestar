@@ -1,0 +1,53 @@
+# Directories
+WORK_DIR = $(HOME)/gblood
+
+MYLIB_DIR = /usr/local
+FFTW2_DIR = $(TACC_FFTW2_DIR)
+PETSC_DIR = $(TACC_PETSC_DIR)
+#include $(TACC_PETSC_DIR)/conf/variables
+MKL_DIR = /opt/apps/intel/11.1/mkl
+MKL_LIB_DIR = $(MKL_DIR)/lib/em64t
+#INTEL_LIB_DIR = /share/apps/intel/intel-14/lib/intel64
+HDF5_DIR = $(TACC_HDF5_DIR)
+#HDF5_DIR = $(HOME)/downlibs/inst/hdf5new
+FFTW3_DIR = $(TACC_FFTW3_DIR)
+
+# Includes
+COMMON_INCLUDE = -I$(WORK_DIR)/include -I$(MYLIB_DIR)/include
+FFTW2_INCLUDE = -I$(TACC_FFTW2_INC)
+FFTW3_INCLUDE = -I$(TACC_FFTW3_INC)
+MKL_INCLUDE = -I$(MKL_DIR)/include
+PETSC_INCLUDE = -I$(TACC_PETSC_DIR)/include -I$(TACC_PETSC_DIR)/$(PETSC_ARCH)/include
+HDF5_INCLUDE = -I$(TACC_HDF5_DIR)/include
+INCLUDE =  $(COMMON_INCLUDE) $(FFTW2_INCLUDE) $(MKL_INCLUDE) $(PETSC_INCLUDE) $(HDF5_INCLUDE) $(FFTW3_INCLUDE)
+#NETCDF_INCLUDE = -I$(NETCDF_DIR)/include
+
+# Libraries
+COMMON_LIB = -L$(WORK_DIR)/lib -lBIE \
+	-L$(MYLIB_DIR)/lib -Wl,-rpath,$(MYLIB_DIR)/lib
+FFTW2_LIB =  -L$(TACC_FFTW2_LIB) -lrfftw_mpi -lrfftw -lfftw_mpi -lfftw
+FFTW3_LIB = -L$(TACC_FFTW3_LIB) -lfftw3
+#NETCDF_LIB = -L$(NETCDF_DIR)/lib -lnetcdf_c++ -lnetcdf
+HDF5_LIB = -L$(TACC_HDF5_LIB) -Wl,-rpath,$(TACC_HDF5_LIB) -lhdf5 -lz
+PETSC_LIB = -L$(TACC_PETSC_LIB) -Wl,-rpath,$(TACC_PETSC_DIR) -lpetsc \
+	-L$(MKL_LIB_DIR) -Wl,-rpath,$(MKL_LIB_DIR) \
+	-lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core \
+	-limf -liomp5 -lpthread -lm
+
+
+# Archiving
+AR = ar ru
+RANLIB = ranlib
+
+# Compiling and linking flags
+CXX = mpicxx 
+#DEBUG = -O0 -g
+OPTS = -O3
+
+CXXFLAGS = $(DEBUG) $(OPTS) $(INCLUDE)
+LDFLAGS =  $(DEBUG) $(OPTS)
+
+# Compiler rules
+%.o : %.cc %.cpp
+	$(CXX) $(CXXFLAGS) -c $<
+

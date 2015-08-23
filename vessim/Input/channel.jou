@@ -1,0 +1,13 @@
+create vertex 0 0 0
+create vertex 12 0 0
+create vertex 12 9 0
+create vertex 0 9 0
+
+create curve polyline vertex 1 to 4 1
+create surface curve 1 to 4
+
+surface all size 0.2
+surface all scheme trimesh
+mesh surface all
+block 1 surface all
+export mesh "channel_12x9.g" dimension 3 block 1 overwrite

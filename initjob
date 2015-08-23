@@ -1,0 +1,16 @@
+#!/bin/bash 	 
+set -x
+#$ -N Vtinit 	# Job Name
+#$ -pe 1way 12 	# Requests 12 tasks/node
+#$ -q development 	# Queue normal or development
+#$ -l h_rt=00:10:00 	# Run time (hh:mm:ss) 
+#$ -V 	#Inherit the submission environment
+#$ -j y 	# Combine stderr and stdout
+#$ -o /work/03201/spann/blood/csv/$JOB_NAME.o$JOB_ID 	# Name of the output file 
+#$ -M spann@che.utexas.edu	# Address for email notification
+#$ -m be 	# Email at Begin and End of job
+
+cd ${WORK}/blood/
+cp ${HOME}/gblood/vessim/vesinitcond ./
+
+ibrun ./vesinitcond	# Run the MPI executable named a.out

@@ -1,0 +1,286 @@
+#include "cxxheaders.h"
+#include "mesh.h"
+#include "cell.h"
+#include "rigid.h"
+#include "wall.h"
+#include "stokesys.h"
+#include "ewald.h"
+#include "netcdf.h"
+#include "readCubit.h"
+
+/* readCubitMesh
+ * readCubitRestart */
+
+/* Read cubit mesh
+ * Arguments:
+ *  fn -- Cubit file name 
+ *  mesh -- the mesh */
+void readCubitMesh(const char *fn, Mesh &mesh)
+{
+    int ncid, dimid, varid;
+    size_t nvert, nface;
+
+    nc_open(fn, NC_NOWRITE, &ncid);
+
+    nc_inq_dimid(ncid, "num_nodes", &dimid);
+    nc_inq_dimlen(ncid, dimid, &nvert);
+
+    nc_inq_dimid(ncid, "num_el_in_blk1", &dimid);
+    nc_inq_dimlen(ncid, dimid, &nface);
+
+    // Read coordinates
+    double *x = new double[nvert*3];
+
+    if (nc_inq_varid(ncid, "coord", &varid) == NC_NOERR) {
+	nc_get_var_double(ncid, varid, x);
+    }
+    else if (nc_inq_varid(ncid, "coordx", &varid) == NC_NOERR) {
+        double *buf = new double[nvert];
+
+        nc_inq_varid(ncid, "coordx", &varid);
+	nc_get_var_double(ncid, varid, buf);
+	for (int i = 0; i < nvert; i++) x[i] = buf[i];
+
+        nc_inq_varid(ncid, "coordy", &varid);
+	nc_get_var_double(ncid, varid, buf);
+	for (int i = 0; i < nvert; i++) x[i+nvert] = buf[i];
+
+        nc_inq_varid(ncid, "coordz", &varid);
+	nc_get_var_double(ncid, varid, buf);
+	for (int i = 0; i < nvert; i++) x[i+2*nvert] = buf[i];
+
+	delete [] buf;
+    }
+
+    int *f2v = new int[nface*3];
+    nc_inq_varid(ncid, "connect1", &varid);
+    nc_get_var_int(ncid, varid, f2v);
+
+    // Copy contents to mesh
+    mesh.verts.resize(nvert);
+    mesh.faces.resize(nface);
+
+    for (int ivert = 0; ivert < nvert; ivert++) {
+        Point &vert = mesh.verts[ivert];
+        FOR_J3 vert.x[j] = x[ivert+j*nvert];
+    }
+
+    for (int iface = 0; iface < nface; iface++) {
+        Tri &face = mesh.faces[iface];
+        FOR_J3 face.ivert[j] = f2v[3*iface+j] - 1;
+    }
+
+    // Dealloc temp arrays
+    delete [] x;
+    delete [] f2v;
+}
+
+
+/*
+void readCubitRestart(const char *fn, StokeSys &stks)
+{
+    int ncid, varid, dimid;
+    size_t dimlen;
+    int ncell, nrigid, nwall;
+    char token[256];
+    int status;
+
+    printf("Read restart file %s\n", fn);
+
+    nc_open(fn, NC_NOWRITE, &ncid);
+
+    nc_inq_varid(ncid, "EWALD_LX", &varid);
+    nc_get_var_double(ncid, varid, &ewald::L[0]);
+
+    nc_inq_varid(ncid, "EWALD_LY", &varid);
+    nc_get_var_double(ncid, varid, &ewald::L[1]);
+
+    nc_inq_varid(ncid, "EWALD_LZ", &varid);
+    nc_get_var_double(ncid, varid, &ewald::L[2]);
+
+    nc_inq_varid(ncid, "TIME", &varid);
+    nc_get_var_double(ncid, varid, &stks.time);
+
+    nc_inq_varid(ncid, "LT", &varid);
+    nc_get_var_int(ncid, varid, &stks.lt);
+
+    nc_inq_varid(ncid, "VBKG_X", &varid);
+    nc_get_var_double(ncid, varid, &stks.vbkg[0]);
+    
+    nc_inq_varid(ncid, "VBKG_Y", &varid);
+    nc_get_var_double(ncid, varid, &stks.vbkg[1]);
+
+    nc_inq_varid(ncid, "VBKG_Z", &varid);
+    nc_get_var_double(ncid, varid, &stks.vbkg[2]);
+
+    printf("  L = %.3f  %.3f  %.3f\n", ewald::L[0], ewald::L[1], ewald::L[2]);
+    printf("  time = %.3f\n", stks.time);
+    printf("  lt = %d\n", stks.lt);
+    printf("  vbkg = %.3f  %.3f  %.3f\n", stks.vbkg[0], stks.vbkg[1], stks.vbkg[2]);
+
+    ncell = 0;
+    status = nc_inq_dimid(ncid, "NCELL", &dimid);
+    if (status == NC_NOERR) {
+	nc_inq_dimlen(ncid, dimid, &dimlen);
+	ncell = dimlen;
+    } 
+
+    nrigid = 0;
+    status = nc_inq_dimid(ncid, "NRIGID", &dimid);
+    if (status == NC_NOERR) {
+	nc_inq_dimlen(ncid, dimid, &dimlen);
+	nrigid = dimlen;
+    } 
+
+    nwall = 0;
+    status = nc_inq_dimid(ncid, "NWALL", &dimid);
+    if (status == NC_NOERR) {
+	nc_inq_dimlen(ncid, dimid, &dimlen);
+	nwall = dimlen;
+    } else
+
+    printf("  ncell = %d\n", ncell);
+    printf("  nrigid = %d\n", nrigid);
+    printf("  nwall = %d\n", nwall);
+
+    stks.cells.resize(ncell);
+    stks.rigids.resize(nrigid);
+    stks.walls.resize(nwall);
+
+    // Read cells
+    for (int icell = 0; icell < ncell; icell++) {
+        Cell &cell = stks.cells[icell];
+        int nvert, nface;
+
+	sprintf(token, "CELL_%d_NVERT", icell);
+	nc_inq_dimid(ncid, token, &dimid);
+	nc_inq_dimlen(ncid, dimid, &dimlen);
+	nvert = dimlen;
+
+	sprintf(token, "CELL_%d_NFACE", icell);
+	nc_inq_dimid(ncid, token, &dimid);
+	nc_inq_dimlen(ncid, dimid, &dimlen);
+	nface = dimlen;
+
+        double *x = new double[3*nvert];
+	int *f2v = new int[3*nface];
+
+	sprintf(token, "CELL_%d_X", icell);
+	nc_inq_varid(ncid, token, &varid);
+	nc_get_var_double(ncid, varid, x);
+
+	sprintf(token, "CELL_%d_F2V", icell);
+	nc_inq_varid(ncid, token, &varid);
+	nc_get_var_int(ncid, varid, f2v);
+
+	cell.verts.resize(nvert);
+	cell.setCoords(x);
+
+	cell.faces.resize(nface);
+	cell.setConnectivities(f2v);
+
+	sprintf(token, "CELL_%d_XREF", icell);
+	status = nc_inq_varid(ncid, token, &varid);
+
+	if (status == NC_NOERR) {
+	    nc_get_var_double(ncid, varid, x);
+
+	    cell.cellRef = new Cell();
+
+	    cell.cellRef->verts.resize(nvert);
+	    cell.cellRef->setCoords(x);
+
+	    cell.cellRef->faces.resize(nface);
+	    cell.cellRef->setConnectivities(f2v);
+	}
+
+	// dealloc temp arrays
+	delete [] x;
+	delete [] f2v;
+    } 
+
+
+    // Read rigids
+    for (int irigid = 0; irigid < nrigid; irigid++) {
+        Rigid &rigid = stks.rigids[irigid];
+        int nvert, nface;
+
+	sprintf(token, "RIGID_%d_NVERT", irigid);
+	nc_inq_dimid(ncid, token, &varid);
+	nc_inq_dimlen(ncid, varid, &dimlen);
+	nvert = dimlen;
+
+	sprintf(token, "RIGID_%d_NFACE", irigid);
+	nc_inq_dimid(ncid, token, &varid);
+	nc_inq_dimlen(ncid, varid, &dimlen);
+	nface = dimlen;
+
+        double *x = new double[3*nvert];
+	int *f2v = new int[3*nface];
+
+	sprintf(token, "RIGID_%d_X", irigid);
+	nc_inq_varid(ncid, token, &varid);
+	nc_get_var_double(ncid, varid, x);
+
+	sprintf(token, "RIGID_%d_F2V", irigid);
+	nc_inq_varid(ncid, token, &varid);
+	nc_get_var_int(ncid, varid, f2v);
+
+	rigid.verts.resize(nvert);
+	rigid.setCoords(x);
+
+	rigid.faces.resize(nface);
+	rigid.setConnectivities(f2v);
+
+	// dealloc temp arrays
+	delete [] x;
+	delete [] f2v;
+    }
+
+
+    // Read walls
+    for (int iwall = 0; iwall < nwall; ++iwall) {
+        Wall &wall = stks.walls[iwall];
+        int nvert, nface;
+
+	sprintf(token, "WALL_%d_NVERT", iwall);
+	nc_inq_dimid(ncid, token, &varid);
+	nc_inq_dimlen(ncid, varid, &dimlen);
+	nvert = dimlen;
+
+	sprintf(token, "WALL_%d_NFACE", iwall);
+	nc_inq_dimid(ncid, token, &varid);
+	nc_inq_dimlen(ncid, varid, &dimlen);
+	nface = dimlen;
+
+        double *x = new double[3*nvert];
+	int *f2v = new int[3*nface];
+
+	sprintf(token, "WALL_%d_X", iwall);
+	nc_inq_varid(ncid, token, &varid);
+	nc_get_var_double(ncid, varid, x);
+
+	sprintf(token, "WALL_%d_F2V", iwall);
+	nc_inq_varid(ncid, token, &varid);
+	nc_get_var_int(ncid, varid, f2v);
+
+	wall.verts.resize(nvert);
+	wall.setCoords(x);
+
+	wall.faces.resize(nface);
+	wall.setConnectivities(f2v);
+
+	// surface force densities
+	wall.f = new double[nvert][3];
+	sprintf(token, "WALL_%d_F", iwall);
+	status = nc_inq_varid(ncid, token, &varid);
+
+	if (status == NC_NOERR) nc_get_var_double(ncid, varid, *wall.f);
+
+	// dealloc temp arrays
+	delete []x;
+	delete []f2v;
+    }  // iwall
+
+    nc_close(ncid);
+} */

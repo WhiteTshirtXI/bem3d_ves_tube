@@ -1,0 +1,7 @@
+RESTART = D/restart000000.dat
+
+LT_MIN = 0
+LT_MAX = 100000
+LT_STEP = 2000
+
+VEL_PROFILE = post/Poiseuille.dat

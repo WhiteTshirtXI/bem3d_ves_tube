@@ -1,0 +1,21 @@
+create vertex	0  	0	-0.125
+create vertex	0.375  	0	-0.125
+create vertex	0.5	0	0
+create vertex	0.375	0  	0.125
+create vertex	0	0	0.125
+
+create curve vert 1 2
+create curve arc three vert 2 3 4
+create curve vertex 4 5
+
+sweep curve 1 2 3 zaxis angle 360
+
+surface all size 0.08
+surface all scheme trimesh
+mesh surface all
+
+merge all
+
+block 1 surface all
+block 1 Element Type TRI3
+export mesh "platelet_D_1.0.g" dimension 3 block 1 overwrite 
