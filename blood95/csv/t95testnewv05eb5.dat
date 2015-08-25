@@ -1,0 +1,297 @@
+TACC: Setting memory limits for job 2710545 to unlimited KB
+TACC: Dumping job script:
+--------------------------------------------------------------------------------
+#!/bin/bash 	 
+set -x
+#$ -N v95series 	# Job Name
+#$ -pe 12way 12 	# Requests 12 tasks/node
+#$ -q development 	# Queue normal or development
+#$ -l h_rt=1:00:00 	# Run time (hh:mm:ss) 
+#$ -V 	#Inherit the submission environment
+#$ -j y 	# Combine stderr and stdout
+#$ -o /work/03201/spann/blood95/csv/t95testnewv05eb5.dat 	# Name of the output file 
+#$ -M spann@che.utexas.edu	# Address for email notification
+#$ -m be 	# Email at Begin and End of job
+
+cd ${WORK}/blood95/conf83/testnew2/
+cp ${HOME}/gblood/vessim/vchannel ./
+mkdir D
+cp ${WORK}/blood95/conf83/v1eb1/D/restart000000.dat D/
+mkdir Input
+cp ${WORK}/blood95/conf83/v1eb1/Input/channel.in Input/
+ibrun ./vchannel -override -CONFINE 0.83 -VBKG0 0.5 -EB 5--------------------------------------------------------------------------------
+TACC: Done.
++ cd /work/03201/spann/blood95/conf83/testnew2/
++ cp /home1/03201/spann/gblood/vessim/vchannel ./
++ mkdir D
++ cp /work/03201/spann/blood95/conf83/v1eb1/D/restart000000.dat D/
++ mkdir Input
++ cp /work/03201/spann/blood95/conf83/v1eb1/Input/channel.in Input/
++ ibrun ./vchannel -override -CONFINE 0.83 -VBKG0 0.5 -EB 5
+TACC: Starting up job 2710545
+TACC: Setting up parallel environment for MVAPICH ssh-based mpirun.
+TACC: Setup complete. Running job script.
+TACC: starting parallel tasks...
+L = 10.000 3.000 3.000
+time = 0.000
+lt = 0
+vbkg = 1.000E+00 0.000E+00 0.000E+00
+shRate = 0.000E+00
+nvesicle = 1
+nwall = 1
+nprobe = 0
+Number of processors =  12
+Ewald physical sum runs on 12 prcoessors
+Ewald Fourier  sum runs on 12 prcoessors
+Ewald sum:
+  L = 10.000 3.000 3.000
+  rc = 0.361
+  SPME mesh = 156 48 48
+  SPME PB = 4
+Confinement ratio = 0.83000
+Adjust ratio = 1.00093
+Output directory = D
+vbkg = 0.50000, 0.00000, 0.00000
+EB = 5.00000
+Viscosity ratio = 1.00000
+Surface Area = 12.58980
+Volume = 3.99049
+Reduced Volume = 0.95000
+lt =         0 time = 0.00000
+    Wall solver: niter = 32  rnorm = 9.44E-04
+    GMRES: niter = 30  rnorm = 2.17E-06
+    total wtime =   40.49 s
+S Area = 12.58980
+Volume = 3.99049
+lt =         1 time = 0.00100
+    Wall solver: niter = 30  rnorm = 9.17E-04
+    GMRES: niter = 19  rnorm = 1.93E-06
+    total wtime =   27.81 s
+S Area = 12.58980
+Volume = 3.99049
+lt =         2 time = 0.00200
+    Wall solver: niter = 22  rnorm = 9.00E-04
+    GMRES: niter = 15  rnorm = 2.13E-06
+    total wtime =   25.68 s
+S Area = 12.58980
+Volume = 3.99049
+lt =         3 time = 0.00300
+    Wall solver: niter = 18  rnorm = 5.77E-04
+    GMRES: niter = 17  rnorm = 2.12E-06
+    total wtime =   24.87 s
+S Area = 12.58980
+Volume = 3.99049
+lt =         4 time = 0.00400
+    Wall solver: niter = 16  rnorm = 9.04E-04
+    GMRES: niter = 16  rnorm = 2.03E-06
+    total wtime =   24.37 s
+S Area = 12.58980
+Volume = 3.99049
+lt =         5 time = 0.00500
+    Wall solver: niter = 16  rnorm = 7.55E-04
+    GMRES: niter = 15  rnorm = 2.14E-06
+    total wtime =   23.75 s
+S Area = 12.58980
+Volume = 3.99049
+lt =         6 time = 0.00600
+    Wall solver: niter = 14  rnorm = 8.24E-04
+    GMRES: niter = 15  rnorm = 2.11E-06
+    total wtime =   23.55 s
+S Area = 12.58980
+Volume = 3.99049
+lt =         7 time = 0.00700
+    Wall solver: niter = 14  rnorm = 8.26E-04
+    GMRES: niter = 16  rnorm = 2.05E-06
+    total wtime =   23.28 s
+S Area = 12.58980
+Volume = 3.99049
+lt =         8 time = 0.00800
+    Wall solver: niter = 14  rnorm = 6.93E-04
+    GMRES: niter = 16  rnorm = 1.93E-06
+    total wtime =   23.07 s
+S Area = 12.58980
+Volume = 3.99049
+lt =         9 time = 0.00900
+    Wall solver: niter = 14  rnorm = 6.27E-04
+    GMRES: niter = 16  rnorm = 1.95E-06
+    total wtime =   23.30 s
+S Area = 12.58980
+Volume = 3.99049
+lt =        10 time = 0.01000
+    Wall solver: niter = 14  rnorm = 5.77E-04
+    GMRES: niter = 15  rnorm = 2.19E-06
+    total wtime =   22.49 s
+S Area = 12.58980
+Volume = 3.99049
+lt =        11 time = 0.01100
+    Wall solver: niter = 14  rnorm = 5.32E-04
+    GMRES: niter = 16  rnorm = 2.07E-06
+    total wtime =   22.65 s
+S Area = 12.58980
+Volume = 3.99049
+lt =        12 time = 0.01200
+    Wall solver: niter = 14  rnorm = 4.94E-04
+    GMRES: niter = 15  rnorm = 2.05E-06
+    total wtime =   22.62 s
+S Area = 12.58980
+Volume = 3.99049
+lt =        13 time = 0.01300
+    Wall solver: niter = 13  rnorm = 8.75E-04
+    GMRES: niter = 16  rnorm = 1.88E-06
+    total wtime =   22.61 s
+S Area = 12.58980
+Volume = 3.99049
+lt =        14 time = 0.01400
+    Wall solver: niter = 14  rnorm = 4.49E-04
+    GMRES: niter = 14  rnorm = 1.98E-06
+    total wtime =   22.74 s
+S Area = 12.58980
+Volume = 3.99049
+lt =        15 time = 0.01500
+    Wall solver: niter = 13  rnorm = 8.01E-04
+    GMRES: niter = 15  rnorm = 2.19E-06
+    total wtime =   22.38 s
+S Area = 12.58980
+Volume = 3.99049
+lt =        16 time = 0.01600
+    Wall solver: niter = 13  rnorm = 7.37E-04
+    GMRES: niter = 15  rnorm = 2.14E-06
+    total wtime =   22.38 s
+S Area = 12.58980
+Volume = 3.99049
+lt =        17 time = 0.01700
+    Wall solver: niter = 13  rnorm = 6.93E-04
+    GMRES: niter = 15  rnorm = 2.21E-06
+    total wtime =   22.10 s
+S Area = 12.58980
+Volume = 3.99049
+lt =        18 time = 0.01800
+    Wall solver: niter = 13  rnorm = 7.22E-04
+    GMRES: niter = 15  rnorm = 2.14E-06
+    total wtime =   22.14 s
+S Area = 12.58980
+Volume = 3.99049
+lt =        19 time = 0.01900
+    Wall solver: niter = 13  rnorm = 6.44E-04
+    GMRES: niter = 15  rnorm = 2.09E-06
+    total wtime =   22.13 s
+S Area = 12.58980
+Volume = 3.99049
+lt =        20 time = 0.02000
+    Wall solver: niter = 13  rnorm = 5.79E-04
+    GMRES: niter = 15  rnorm = 2.02E-06
+    total wtime =   19.15 s
+S Area = 12.58980
+Volume = 3.99049
+lt =        21 time = 0.02100
+    Wall solver: niter = 13  rnorm = 5.41E-04
+    GMRES: niter = 14  rnorm = 2.21E-06
+    total wtime =   19.10 s
+S Area = 12.58980
+Volume = 3.99049
+lt =        22 time = 0.02200
+    Wall solver: niter = 13  rnorm = 4.95E-04
+    GMRES: niter = 15  rnorm = 1.99E-06
+    total wtime =   19.12 s
+S Area = 12.58980
+Volume = 3.99049
+lt =        23 time = 0.02300
+    Wall solver: niter = 12  rnorm = 8.26E-04
+    GMRES: niter = 13  rnorm = 2.04E-06
+    total wtime =   19.01 s
+S Area = 12.58980
+Volume = 3.99049
+lt =        24 time = 0.02400
+    Wall solver: niter = 12  rnorm = 7.96E-04
+    GMRES: niter = 14  rnorm = 2.12E-06
+    total wtime =   18.95 s
+S Area = 12.58980
+Volume = 3.99049
+lt =        25 time = 0.02500
+    Wall solver: niter = 12  rnorm = 7.09E-04
+    GMRES: niter = 13  rnorm = 2.15E-06
+    total wtime =   18.98 s
+S Area = 12.58980
+Volume = 3.99049
+lt =        26 time = 0.02600
+    Wall solver: niter = 12  rnorm = 6.86E-04
+    GMRES: niter = 13  rnorm = 2.21E-06
+    total wtime =   18.61 s
+S Area = 12.58980
+Volume = 3.99049
+lt =        27 time = 0.02700
+    Wall solver: niter = 12  rnorm = 6.28E-04
+    GMRES: niter = 13  rnorm = 2.09E-06
+    total wtime =   18.44 s
+S Area = 12.58980
+Volume = 3.99049
+lt =        28 time = 0.02800
+    Wall solver: niter = 12  rnorm = 5.92E-04
+    GMRES: niter = 12  rnorm = 2.14E-06
+    total wtime =   18.29 s
+S Area = 12.58980
+Volume = 3.99049
+lt =        29 time = 0.02900
+    Wall solver: niter = 12  rnorm = 5.33E-04
+    GMRES: niter = 12  rnorm = 2.03E-06
+    total wtime =   18.25 s
+S Area = 12.58980
+Volume = 3.99049
+lt =        30 time = 0.03000
+    Wall solver: niter = 12  rnorm = 5.00E-04
+    GMRES: niter = 11  rnorm = 2.11E-06
+    total wtime =   18.13 s
+S Area = 12.58980
+Volume = 3.99049
+lt =        31 time = 0.03100
+    Wall solver: niter = 11  rnorm = 8.43E-04
+    GMRES: niter = 10  rnorm = 2.21E-06
+    total wtime =   17.76 s
+S Area = 12.58980
+Volume = 3.99049
+lt =        32 time = 0.03200
+    Wall solver: niter = 11  rnorm = 8.13E-04
+    GMRES: niter = 10  rnorm = 2.13E-06
+    total wtime =   17.87 s
+S Area = 12.58980
+Volume = 3.99049
+lt =        33 time = 0.03300
+    Wall solver: niter = 11  rnorm = 7.13E-04
+    GMRES: niter = 10  rnorm = 2.11E-06
+    total wtime =   17.73 s
+S Area = 12.58980
+Volume = 3.99049
+lt =        34 time = 0.03400
+    Wall solver: niter = 11  rnorm = 7.16E-04
+    GMRES: niter = 9  rnorm = 2.15E-06
+    total wtime =   17.60 s
+S Area = 12.58980
+Volume = 3.99049
+lt =        35 time = 0.03500
+    Wall solver: niter = 11  rnorm = 6.22E-04
+    GMRES: niter = 9  rnorm = 2.12E-06
+    total wtime =   17.50 s
+S Area = 12.58980
+Volume = 3.99049
+lt =        36 time = 0.03600
+    Wall solver: niter = 11  rnorm = 5.94E-04
+    GMRES: niter = 8  rnorm = 2.20E-06
+    total wtime =   17.18 s
+S Area = 12.58980
+Volume = 3.99049
+lt =        37 time = 0.03700
+    Wall solver: niter = 10  rnorm = 8.25E-04
+    GMRES: niter = 8  rnorm = 2.14E-06
+    total wtime =   17.17 s
+S Area = 12.58980
+Volume = 3.99049
+lt =        38 time = 0.03800
+    Wall solver: niter = 11  rnorm = 5.05E-04
+    GMRES: niter = 8  rnorm = 2.13E-06
+    total wtime =   17.15 s
+S Area = 12.58980
+Volume = 3.99049
+lt =        39 time = 0.03900
+    Wall solver: niter = 10  rnorm = 6.99E-04
+TACC: Cleaning up after job: 2710545
+TACC: Done.
