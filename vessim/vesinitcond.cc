@@ -22,10 +22,10 @@ int main()
     Wall *wall = &stks.walls[0];
     
     //HDF5 reader:
-    //wall->readHDF5("Input/channel_16x9.h5");
+    //wall->readHDF5("Input/cylinder005.h5");
 
     //Read from DAT file:
-    wall->readDATsingle("Input/rcylinder2x10.dat");
+    wall->readDATsingle("Input/wall20_128.dat");
 
 
     // Periodic domain
@@ -36,9 +36,9 @@ int main()
 	//Domain dimensions
 	using ewald::L;
 	L[0] = xmax[0] - xmin[0]; 
-	L[1] = 2.2;  // Tube: make this bigger than the actual channel (e.g. add +0.5 or multiply by 1.05, etc.)
+	L[1] = 3;  // Tube: make this bigger than the actual channel (e.g. add +0.5 or multiply by 1.05, etc.)
 	//L[2] = xmax[2] - xmin[2];  
-	L[2] = 2.2;		// height of the channel.  Must be slightly greater than diameter of wall mesh
+	L[2] = 3;		// height of the channel.  Must be slightly greater than diameter of wall mesh
 
 	ewald::vol = L[0]*L[1]*L[2];
 	ewald::iVol = 1.0/ewald::vol;
@@ -51,9 +51,9 @@ int main()
     }
 
 	double xcen, ycen, zcen; // this is hardcoded by Andrew, but you would want to replace this with cin, cout etc. to specify the cell's center.
-        xcen = 5;   //Center of 5-long channel
-		ycen = 1.1; //Center of 2.2-wide channel
-		zcen = 1.1; //Center of 2.2-high channel
+        xcen = 10;   //Center of 5-long channel
+		ycen = 1.; //Center of 2.2-wide channel
+		zcen = 1.; //Center of 2.2-high channel
 
 
 //    // Reference cell
@@ -72,7 +72,8 @@ int main()
 	    //Now add the cell.
 		//For this version it's a rigid, but it will be a cell soon
 		Vesicle newves;
-		newves.readDATsingle("Dinit/p95ca10000.dat");  //Set the mesh you want to load here (pregenerated meshes for vesicles if you want to use them)
+                //newves.readDATsingle("/work/03201/spann/blood95/85/conf83/v1eb1/D/vesicle000000.dat");
+		newves.readDATsingle("Input/ves65eqlow.dat");  //Set the mesh you want to load here (pregenerated meshes for vesicles if you want to use them)
 		// reads a tecplot-compliant file rather than a hdf5-compliant file
 		// files should be centered at 0,0
 		newves.setInternalPointers();
@@ -110,7 +111,7 @@ int main()
     stks.writeRestart(fn);
 
     sprintf(fn, "%s%6.6d%s", "D/vesicle", stks.lt, ".dat");
-    stks.writeVesicles(fn);
+    stks.writeVesiclesplain(fn);
 
     sprintf(fn, "%s%6.6d%s", "D/wall", stks.lt, ".dat");
     stks.writeWalls(fn);

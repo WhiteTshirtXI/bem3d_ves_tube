@@ -1326,12 +1326,19 @@ void Mesh::readDATsingle(const char *fn)
 	infile.open(fn);
 	getline(infile,sline);   //Throw away 1st line, which is "# TIME ="
 	getline(infile,sline);   //Throw away 2nd line, which reads XYZ (optional UVW)
-	getline(infile,sline);   //Read third line to find nvert and nface
+	getline(infile,sline);   //Read third line to find nvert and nface.  begins with "ZONE N="
 	sline = sline.substr(7); //Discard "ZONE N="
 	mystringstream.clear();
-	mystringstream.str(sline);
+	mystringstream.str(sline);  //Read the number of vertices
 	mystringstream >> nvert;  //Read nvert
-	nface = 2*nvert-4;        //nface computed from Euler's formula if all faces are triangles
+	//cout << "nvert = " << nvert << endl;
+	sline = sline.substr(int(floor(log10(nvert)))+4);//Jump to number past E=
+	mystringstream.clear();
+	mystringstream.str(sline);  //Read the number of faces
+	mystringstream >> nface;
+    //cout << "nface = " << nface << endl;
+
+	//nface = 2*nvert-4;        //nface computed from Euler's formula if all faces are triangles.  //Update:  not assuming this anymore because we could want to load walls
 
 
     x = new double[3*nvert];  //We're going to fill these arrays then transfer the values to the mesh's arrays

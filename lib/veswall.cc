@@ -1269,6 +1269,45 @@ void VesWall::writeVesicles(const char *fn)
     fclose(file);
 }
 
+/* Write all vesicles to file, just positions, no velocity or tension
+ * Arguments:
+ *   fn -- file name */
+void VesWall::writeVesiclesplain(const char *fn)
+{
+    if (numVesicles() <= 0) return;
+
+    FILE *file = fopen(fn, "w");
+    fprintf(file, "# TIME = %f\n", time);
+
+    fprintf(file, "variables = x, y, z\n");
+
+    for (int ives = 0; ives < numVesicles(); ives++) {
+        Vesicle &vesicle = vesicles[ives];
+	int nvert = vesicle.numVerts();
+	int nface = vesicle.numFaces();
+	fprintf(file, "zone N=%d E=%d F=FEPOINT ET=TRIANGLE\n", nvert, nface);
+
+	// coordinates
+	for (int ivert = 0; ivert < nvert; ivert++) 
+	{
+	    Point &vert = vesicle.verts[ivert];
+	    fprintf(file, " %10.7f %10.7f %10.7f\n", vert.x[0], vert.x[1], vert.x[2]);
+    }
+
+
+
+
+	// connectivity
+	for (int iface = 0; iface < nface; iface++) {
+	    Tri &face = vesicle.faces[iface];
+	    fprintf(file, " %d %d %d\n", face.ivert[0]+1, face.ivert[1]+1, face.ivert[2]+1);
+        }
+    }
+
+    fclose(file);
+}
+
+
 
 
 /* Write all walls to file

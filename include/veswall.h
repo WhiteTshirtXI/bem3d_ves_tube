@@ -30,14 +30,8 @@ public:
     // Interaction matries
     Mat matSL[2][2], matDL[2][2];
 
-    // Probes (Eulerian) and tracers (Lagrangian)
-    int nprb, ntrac;
+    // Probe point coordiantes and velocities
     MArray<double,2> xprb, vprb;
-    MArray<double,2> xtrac, vtrac;
-    double (*xprb_ptr)[3];// = &xprb; 
-    double (*vprb_ptr)[3];// = &vprb;
-    double (*xtrac_ptr)[3];// = &xtrac;
-    double (*vtrac_ptr)[3];// = &vtrac;
 
     string outfiledirectory;
 
@@ -95,6 +89,7 @@ public:
 
     void writeAll();
     void writeVesicles(const char *);
+    void writeVesiclesplain(const char *);
     void writeWalls(const char*);
     void writeRestart(const char *);
     void writeProbe(const char*);
@@ -104,8 +99,6 @@ public:
 
     void calcStress(double (*)[3]);
     double volFraction();
-    
-    bool pointInsideSomeVesicle(const double *, int *whichVesicle=NULL);
 };
 
 #endif
